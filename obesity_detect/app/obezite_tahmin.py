@@ -1,31 +1,28 @@
 import streamlit as st
-import joblib
-from joblib import load
+import xgboost as xgb
 import pandas as pd
 
-# Modelinizi yükleyin
-try:
-    model = load('xgb_model.joblib')
-except Exception as e:
-    st.error("Model yüklenirken bir hata oluştu: {}".format(e))
+# XGBoost modelini JSON formatından yükleme
+model = xgb.XGBClassifier()
+model.load_model('xgb_model.json')
 
-# Kullanıcıdan giriş alma
+# Streamlit arayüzü
 st.title("Obezite Tahmin Modeli")
 
-# Kullanıcıdan girdi alma
-sex = st.selectbox("Cinsiyet(1 : Erkek , 2 : Kadın):", [1, 2])  
+# Kullanıcıdan giriş alma
+sex = st.selectbox("Cinsiyet(1 : Erkek , 2 : Kadın):", [1, 2])
 age = st.number_input("Yaş:", min_value=0, max_value=120)
 height = st.number_input("Boy (cm):", min_value=0, max_value=250)
-overweight_obese_family = st.selectbox("Ailede Obezite Geçmişi(1 : Obeziteye sahip aile bireyi var, 2 : Obeziteye sahip aile bireyi yok):", [1, 2])  
+overweight_obese_family = st.selectbox("Ailede Obezite Geçmişi(1 : Obeziteye sahip aile bireyi var, 2 : Obeziteye sahip aile bireyi yok):", [1, 2])
 consumption_of_fast_food = st.selectbox("Hızlı Gıda Tüketimi (1 : Evet ,2 : Hayır):", [1, 2])
-frequency_of_consuming_vegetables = st.selectbox("Sebze Tüketim Sıklığı (1 : Nadiren, 2 : Ara sıra , 3 : Her zaman):", [1, 2, 3])
+frequency_of_consuming_vegetables = st.selectbox("Sebze Tüketim Sıklıgı (1 : Nadiren, 2 : Ara sıra , 3 : Her zaman):", [1, 2, 3])
 number_of_main_meals_daily = st.selectbox("Günlük Ana Yemek Sayısı (1 : Günde 1-2 , 2 : Günde 3 , 3: Günde 3 'ten fazla):", [1, 2, 3])
 food_intake_between_meals = st.selectbox("Ana Öğünler Arası Gıda Tüketimi (1 :Nadiren yaparım, 2 : Ara sıra yaparım , 3 : Genellikle yaparım, 4 : Her zaman yaparım):", [1, 2, 3, 4])
 smoking = st.selectbox("Sigara Kullanımı (1: Evet, 2: Hayır):", [1, 2])
 liquid_intake_daily = st.selectbox("Günlük Sıvı Tüketimi (1 : 1 litreden az, 2 : 1 ile 2 litre arası , 3 : 2 litreden fazla):", [1, 2, 3])
-calculation_of_calorie_intake = st.selectbox("Kalori Alımını Hesaplama (1 : Kalori alımını hesaplıyorum, 2 : Kalori alımını hesaplamaıyorum):", [1, 2])
+calculation_of_calorie_intake = st.selectbox("Kalori Alımını Hesaplama (1 : Kalori alımını hesaplıyorum, 2 : Kalori alımını hesaplamıyorum):", [1, 2])
 physical_exercise = st.selectbox("Fiziksel Egzersiz (1 : Fiziksel olarak aktif değilim, 2 : Haftada 1 ile 2 gün yaparım, 3 : Haftada 3 ile 4 gün yaparım, 4 : Haftada 5 ile 6 gün yaparım, 5 : Haftada 6 veya daha fazla yaparım):", [1, 2, 3, 4, 5])
-schedule_dedicated_to_technology = st.selectbox("Teknolojiye Ayırılan Zaman (1 : Günlük 0 ile 2 saat ayırırım, 2 : Günlük 3 ile 5 saat ayırırım, 3 : Günlük 5 saatten fazla ayırırım):", [1, 2, 3, 4, 5])
+schedule_dedicated_to_technology = st.selectbox("Teknolojiye Ayırılan Zaman (1 : Günlük 0 ile 2 saat ayırırım, 2 : Günlük 3 ile 5 saat ayırırım, 3 : Günlük 5 saatten fazla ayırırım):", [1, 2, 3])
 type_of_transportation_used = st.selectbox("Kullanılan Ulaşım Türü (1 : Otomobil , 2 : Motor , 3 : Bisiklet, 4 : Toplu Taşıma , 5 : Yürüme):", [1, 2, 3, 4, 5])
 
 # Giriş verilerini bir DataFrame'e dönüştürme
@@ -48,9 +45,12 @@ input_data = pd.DataFrame({
 
 # Modeli kullanarak tahmin yapma
 if st.button("Tahmin Et"):
-    predictions = model.predict(input_data)
+    # XGBoost modeli için giriş verisini numpy array'e dönüştürme
+    predictions = model.predict(input_data.values)
+    
     st.write("Tahmin edilen sınıf:", predictions[0])
     if predictions[0] == 1:
         st.write("Tahmin: Obez")
     else:
         st.write("Tahmin: Obez Değil")
+
