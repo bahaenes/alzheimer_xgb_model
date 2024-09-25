@@ -96,7 +96,7 @@ input_data = pd.DataFrame({
 
 # Modeli kullanarak tahmin yapma
 if st.button("Tahmin Et"):
-    predictions = model.predict(input_data)
+    predictions = xgb_model.predict(input_data)
     st.write("Tahmin edilen sınıf:", predictions[0])
 
     if predictions[0] == 3:
