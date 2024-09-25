@@ -1,11 +1,11 @@
-
 import streamlit as st
-import pickle
-import pandas as pd
+import streamlit as st
+import joblib
+from joblib import load
 
-# Modeli yükle
-with open('xgb_model.pkl', 'rb') as file:
-    model = pickle.load(file)
+# Modelinizi yükleyin
+model = load('C:/Users/BAHA ENES/OneDrive/Masaüstü/veribilimi/obesity_detect/app/xgb_model.joblib')
+import pandas as pd
 
 # Kullanıcıdan giriş alma
 st.title("Obezite Tahmin Modeli")
@@ -47,3 +47,4 @@ input_data = pd.DataFrame({
 if st.button("Tahmin Et"):
     predictions = model.predict(input_data)
     st.write("Tahmin edilen sınıf:", predictions[0])
+
