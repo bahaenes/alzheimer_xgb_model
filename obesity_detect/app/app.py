@@ -1,10 +1,78 @@
+import pandas as pd
+
+df = pd.read_excel("C:/Users/BAHA ENES/archive/Obesity_Dataset.xlsx")
+df.head()
+
+from sklearn.model_selection import train_test_split,GridSearchCV
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from xgboost import XGBClassifier
+from catboost import CatBoostClassifier
+from sklearn.metrics import confusion_matrix,accuracy_score, roc_auc_score,roc_curve
+
+
+df["Class"] = df["Class"].apply(lambda x : x-1)
+
+X= df.drop(columns=["Class"])
+y=df["Class"]
+
+X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=0.2,random_state = 42)
+
+sc=StandardScaler()
+X_train = sc.fit_transform(X_train)
+X_test = sc.transform(X_test)
+
+xgb = XGBClassifier()
+xgb_param = param_grid = {
+    'learning_rate': [0.01, 0.1, 0.2],
+    'n_estimators': [100, 200, 300],
+    'max_depth': [3, 5, 7]
+}
+xgb_grid = GridSearchCV(xgb,xgb_param,cv=10,n_jobs=-1,verbose=2).fit(X_train,y_train)
+xgb_model = xgb_grid.best_estimator_
+y_pred = xgb_model.predict(X_test)
+xgb_acc=accuracy_score(y_test,y_pred)
+xgb_conf=confusion_matrix(y_test,y_pred)
+
+print(xgb_acc)
+print(xgb_conf)
+
+
+import joblib
+
+from joblib import dump
+dump(xgb_model, 'xgb_model.joblib')
+
+from joblib import load
+
+# Modelinizi yükleyin
+model = load('xgb_model.joblib')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import streamlit as st
 import streamlit as st
 import joblib
 from joblib import load
 
 # Modelinizi yükleyin
-model = load('C:/Users/BAHA ENES/OneDrive/Masaüstü/veribilimi/obesity_detect/app/xgb_model.joblib')
+model = load('xgb_model.joblib')
 import pandas as pd
 
 # Kullanıcıdan giriş alma
@@ -13,7 +81,7 @@ st.title("Obezite Tahmin Modeli")
 sex = st.selectbox("Cinsiyet(1 : Erkek , 2 : Kadın):", [1, 2])  # 1: Erkek, 2: Kadın
 age = st.number_input("Yaş:", min_value=0, max_value=120)
 height = st.number_input("Boy (cm):", min_value=0, max_value=250)
-overweight_obese_family = st.selectbox("Ailede Obezite Geçmişi(1 : Obeziteye sahip aile bireyi var, 2 : Obeziteye sahip aile bireyi yok):", [1, 2])  
+overweight_obese_family = st.selectbox("Ailede Obezite Geçmişi(1 : Obeziteye sahip aile bireyi var, 2 : Obeziteye sahip aile bireyi yok):", [1, 2])
 consumption_of_fast_food = st.selectbox("Hızlı Gıda Tüketimi (1 : Evet ,2 : Hayır):", [1, 2])
 frequency_of_consuming_vegetables = st.selectbox("Sebze Tüketim Sıklığı (1 : Nadiren, 2 : Ara sıra , 3 : Her zaman):", [1, 2, 3])
 number_of_main_meals_daily = st.selectbox("Günlük Ana Yemek Sayısı (1 : Günde 1-2 , 2 : Günde 3 , 3: Günde 3 'ten fazla):", [1, 2, 3])
@@ -30,6 +98,7 @@ input_data = pd.DataFrame({
     "Sex": [sex],
     "Age": [age],
     "Height": [height],
+
     "Overweight_Obese_Family": [overweight_obese_family],
     "Consumption_of_Fast_Food": [consumption_of_fast_food],
     "Frequency_of_Consuming_Vegetables": [frequency_of_consuming_vegetables],
