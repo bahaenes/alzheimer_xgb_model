@@ -96,15 +96,16 @@ input_data = pd.DataFrame({
 
 # Modeli kullanarak tahmin yapma
 if st.button("Tahmin Et"):
-    # Giriş verilerini standartlaştırma
-    input_data_scaled = sc.transform(input_data)
-
-    # Tahmin yapma
-    predictions = xgb_model.predict(input_data_scaled)
-
-    # Sonuçları gösterme
+    predictions = model.predict(input_data)
     st.write("Tahmin edilen sınıf:", predictions[0])
-    if predictions[0] == 1:
+
+    if predictions[0] == 3:
         st.write("Tahmin: Obez")
+    elif predictions[0] == 2:
+        st.write("Tahmin: Aşırı Kilolu")
+    elif predictions[0] == 1:
+        st.write("Tahmin: Normal")
+    elif predictions[0] == 0:
+        st.write("Tahmin: Zayıf")
     else:
-        st.write("Tahmin: Obez Değil")
+        st.write("Tahmin: Geçersiz")
