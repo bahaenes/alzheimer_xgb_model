@@ -44,10 +44,4 @@ alzheimer-tespit-projesi/
 ├── alzheimers_prediction_dataset.csv  # Veri seti
 ├── README.md                      # Bu dokümantasyon dosyası
 └── requirements.txt               # Gerekli Python paketleri listesi
-
-
-
----
-
-Bu README dosyası, projenizin amacını, nasıl çalıştığını ve nasıl kullanılacağını açık bir şekilde anlatmaktadır. GitHub deposunuza ekleyerek, projenizi portföyünüzde profesyonel bir şekilde sergileyebilirsiniz. Herhangi bir ek düzenleme veya soru olursa, yardımcı olmaktan memnuniyet duyarım!
 Bu proje MIT Lisansı kapsamında lisanslanmıştır.
