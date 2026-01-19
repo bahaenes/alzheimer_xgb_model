@@ -1,6 +1,7 @@
 import xgboost as xgb
 from sklearn.model_selection import GridSearchCV
 import logging
+import joblib
 
 def train_xgb_model(X_train, y_train, param_grid=None, n_jobs=1):
     """
@@ -32,3 +33,12 @@ def train_xgb_model(X_train, y_train, param_grid=None, n_jobs=1):
     best_xgb.fit(X_train, y_train)
     logging.info("Model training completed.")
     return best_xgb
+
+def save_model(model, filepath):
+    joblib.dump(model, filepath)
+    logging.info(f"Model saved to {filepath}")
+
+def load_model(filepath):
+    model = joblib.load(filepath)
+    logging.info(f"Model loaded from {filepath}")
+    return model

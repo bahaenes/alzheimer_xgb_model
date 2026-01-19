@@ -4,12 +4,14 @@ import numpy as np
 import sys
 import os
 from io import StringIO
+import tempfile
+import joblib
 
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.data_loader import load_data
-from src.preprocessing import preprocess_data, prepare_model_data
+from src.preprocessing import preprocess_data, prepare_model_data, AlzheimerPreprocessor
 
 class TestAlzheimerPipeline(unittest.TestCase):
 
@@ -52,7 +54,7 @@ France,75,Female,10,24.0,Medium,Current,Socially,No,No,Normal,Yes,60,Low,Good,He
         self.assertIn("Gender_Male", df_processed.columns)
         self.assertIn("Gender_Female", df_processed.columns)
 
-        # Check label encoding (Education Level should be int/numeric now, although it was int in CSV, but let's check Physical Activity Level)
+        # Check label encoding
         self.assertTrue(pd.api.types.is_integer_dtype(df_processed["Physical Activity Level"]) or pd.api.types.is_float_dtype(df_processed["Physical Activity Level"]))
 
     def test_prepare_model_data(self):
@@ -64,6 +66,47 @@ France,75,Female,10,24.0,Medium,Current,Socially,No,No,Normal,Yes,60,Low,Good,He
         self.assertEqual(X_train.shape[1], X_test.shape[1])
 
         self.assertTrue(len(X_train) > 0)
+
+    def test_preprocessor_class_flow(self):
+        df = load_data(self.filepath)
+        preprocessor = AlzheimerPreprocessor()
+
+        # Fit Transform Preprocessing
+        df_processed = preprocessor.fit_transform_preprocessing(df)
+        self.assertIn("Gender_Male", df_processed.columns)
+
+        # Split
+        X_train, X_val, X_test, y_train, y_val, y_test = preprocessor.prepare_and_split(df_processed)
+
+        # Fit Scale
+        X_train_scaled = preprocessor.fit_transform_scaling(X_train)
+        self.assertEqual(X_train.shape, X_train_scaled.shape)
+
+        # Save and Load
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            preprocessor.save(tmp.name)
+            tmp_path = tmp.name
+
+        loaded_preprocessor = AlzheimerPreprocessor.load(tmp_path)
+        os.remove(tmp_path)
+
+        # Test Inference Transform
+        # Simulate new data (without target usually, but let's pass a row with target and see if it ignores/handles it)
+        # Or remove target col
+        df_inference = df.drop(columns=["Alzheimer’s Diagnosis"]).iloc[:1]
+
+        # To test inference, we need to pass a dataframe.
+        # But we must be careful. Existing `transform_preprocessing` implementation might crash if we don't have all columns expected?
+        # My implementation of `transform_preprocessing` tries to encode columns if they exist.
+
+        df_inf_processed = loaded_preprocessor.transform_preprocessing(df_inference)
+
+        # Prepare for inference (drop columns etc)
+        # process_input_for_inference does all steps
+        X_inference = loaded_preprocessor.process_input_for_inference(df_inference)
+
+        # Check shape matches training shape (number of features)
+        self.assertEqual(X_inference.shape[1], X_train_scaled.shape[1])
 
 if __name__ == '__main__':
     unittest.main()
